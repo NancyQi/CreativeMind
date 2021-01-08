@@ -29,7 +29,7 @@ import com.coloros.ocs.base.common.api.OnConnectionSucceedListener;
 public class Recognize extends Activity {
     private ImageView view;
     private final int TAKE_PHOTOS_CODE = 200;
-
+    private int startCode;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,11 +75,7 @@ public class Recognize extends Activity {
                 @Override
                 public void onServiceConnect() {
                     Log.i("TAG", "initService: onServiceConnect");
-                    int startCode = mCVClient.start();
-                    if(startCode!=0){
-                        System.out.println("there's false startCode");
-                        System.exit(0);
-                    }
+                    startCode = mCVClient.start();
                 }
 
                 @Override
@@ -87,21 +83,21 @@ public class Recognize extends Activity {
                     Log.e("TAG", "initService: onServiceDisconnect: ");
                 }
             });
+            if(startCode!=0){
+                //recognize
+                HandInputSlot inputSlot = (HandInputSlot) mCVClient.createInputSlot();
+                inputSlot.setTargetBitmap(bm);
 
-            //recognize
-            HandInputSlot inputSlot = (HandInputSlot) mCVClient.createInputSlot();
-            inputSlot.setTargetBitmap(bm);
 
+                HandOutputSlot outputSlot = (HandOutputSlot) mCVClient.createOutputSlot();
+                mCVClient.process(inputSlot, outputSlot);
 
-            HandOutputSlot outputSlot = (HandOutputSlot) mCVClient.createOutputSlot();
-            mCVClient.process(inputSlot, outputSlot);
+                GestureResultList handList = outputSlot.getHandList();
 
-            GestureResultList handList = outputSlot.getHandList();
-
-            for (int handOrder = 0; handOrder < handList.getList().size(); ++handOrder) {
-                GestureResult hand = handList.getList().get(handOrder);
-                Rect2Pt boundingBox = hand.getBoundingBox();
-            }
+                for (int handOrder = 0; handOrder < handList.getList().size(); ++handOrder) {
+                    GestureResult hand = handList.getList().get(handOrder);
+                    Rect2Pt boundingBox = hand.getBoundingBox();
+                }
 
             /*
             GestureResultList gestureResultList = outputSlot.getHandList();
@@ -111,7 +107,9 @@ public class Recognize extends Activity {
                 List<Float> lmkList = landmark.getLmk();
             }
             */
-            System.out.println(handList.getList().get(0));
+                System.out.println(handList.getList().get(0));
+            }
+
             if (mCVClient != null) {
                 mCVClient.stop();
                 mCVClient.releaseService();
